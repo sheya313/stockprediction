@@ -1,0 +1,46 @@
+import streamlit as st
+import pandas as pd
+import numpy as np
+from fbprophet import Prophet
+
+# Load the stock data
+df = pd.read_csv("stock_data.csv")
+
+# Create a Prophet model
+m = Prophet()
+
+# Fit the model to the data
+m.fit(df)
+
+# Create a future dataframe
+future = m.make_future_dataframe(periods=365)
+
+# Predict the future values
+forecast = m.predict(future)
+
+# Plot the forecast
+st.plotly_chart(forecast.plot(x="ds", y="yhat", figsize=(10, 6)))
+
+# Create a dropdown menu for the stock
+stock = st.selectbox("Select a stock", ("Nvidia", "Morgan Stanley", "Tesla", "Google"))
+
+# Get the stock data for the selected stock
+df_stock = df[df["Symbol"] == stock]
+
+# Plot the stock data
+st.line_chart(df_stock["Close"])
+
+# Predict the stock price for the next 30 days
+prediction = m.predict(future)[stock]["yhat"]
+
+# Display the prediction
+st.write("The predicted stock price for the next 30 days is:", prediction)
+
+# Create a slider menu for the number of days to predict
+days_to_predict = st.slider("Number of days to predict", 1, 30)
+
+# Predict the stock price for the specified number of days
+predictions = m.predict(future)[stock]["yhat"].iloc[-days_to_predict:]
+
+# Plot the predictions
+st.line_chart(predictions)
